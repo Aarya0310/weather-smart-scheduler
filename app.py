@@ -110,5 +110,12 @@ def checkout():
         db.session.commit()
     return jsonify({"message": "Tasks scheduled.", "order_id": order_id})
 
+from flask import render_template
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
 if __name__ == "__main__":
     app.run(debug=True)
