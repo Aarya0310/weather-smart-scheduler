@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import time
@@ -6,22 +6,13 @@ import os
 
 app = Flask(__name__)
 
-# SQLite DB config
+# ======================= CONFIGURATION ============================
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///suggestions.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-@app.route("/")
-def home():
-    return """
-    <h2>Welcome to the Smart Scheduler API</h2>
-    <p>Use the endpoint <code>/suggest?city=Pune</code> to get suggestions.</p>
-    <p>Example: <a href='/suggest?city=Pune'>/suggest?city=Pune</a></p>
-    """
-
-
-# Model
+# ======================= DATABASE MODEL ===========================
 class Suggestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     city = db.Column(db.String(100), nullable=False)
@@ -31,16 +22,23 @@ class Suggestion(db.Model):
     suggestion = db.Column(db.String(200), nullable=False)
     order_id = db.Column(db.String(100), nullable=True)
 
-# Create DB before first request
-@app.before_request
-def create_tables_if_not_exist():
-    if not os.path.exists("suggestions.db"):
-        db.create_all()
+# =================== INITIAL DB SETUP =============================
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
+# ======================= ROUTES ==================================
+
+# Home route (renders frontend template)
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+# Main API endpoint for weather-based suggestion
 @app.route("/suggest", methods=["GET"])
 def get_suggestion():
     city = request.args.get("city", "Bangalore")
-    API_KEY = "c9e13a16efccc359520cbcfb3c11185c"  # Your actual OpenWeatherMap API key
+    API_KEY = "c9e13a16efccc359520cbcfb3c11185c"  # Replace with environment variable in production
 
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
@@ -48,12 +46,13 @@ def get_suggestion():
         data = response.json()
 
         if 'weather' not in data or 'main' not in data:
-            return jsonify({"error": "Invalid response. City may be wrong."})
+            return jsonify({"error": "Invalid response. City may be wrong."}), 400
 
         weather_description = data['weather'][0]['description']
         temperature = data['main']['temp']
         aqi = 90 if temperature > 30 else 60
 
+        # Suggestion logic
         if aqi > 100:
             suggestion_text = "Avoid outdoor activities. Air quality is poor."
         elif "rain" in weather_description:
@@ -63,6 +62,7 @@ def get_suggestion():
         else:
             suggestion_text = "Weather and air quality are suitable for outdoor tasks."
 
+        # Save to database
         new_suggestion = Suggestion(
             city=city,
             weather=weather_description,
@@ -84,6 +84,7 @@ def get_suggestion():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Route to view all past suggestions
 @app.route("/suggestions", methods=["GET"])
 def view_all_suggestions():
     suggestions = Suggestion.query.all()
@@ -99,23 +100,20 @@ def view_all_suggestions():
         } for s in suggestions
     ])
 
+# Checkout endpoint to attach an order ID to last suggestion
 @app.route("/checkout", methods=["POST"])
 def checkout():
     data = request.get_json()
     city = data.get("city")
     order_id = f"ORDER-{int(time.time())}"
+
     last_suggestion = Suggestion.query.filter_by(city=city).order_by(Suggestion.id.desc()).first()
     if last_suggestion:
         last_suggestion.order_id = order_id
         db.session.commit()
+
     return jsonify({"message": "Tasks scheduled.", "order_id": order_id})
 
-from flask import render_template
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-
+# ======================= MAIN EXECUTION ===========================
 if __name__ == "__main__":
     app.run(debug=True)
