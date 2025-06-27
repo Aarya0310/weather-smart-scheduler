@@ -1,6 +1,5 @@
-# Weather-smart-scheduler
 
-# 🌤️ Smart Scheduler: Air Quality and Weather Integrated Task Suggestion App
+# 🌤️ Weather-smart-scheduler: Air Quality and Weather Integrated Task Suggestion App
 
 This Capstone Project is a Flask-based web application that integrates **real-time weather and air quality (AQI)** data to generate smart task suggestions for users in different cities. It stores suggestions in a local database and allows mock checkout functionality.
 
