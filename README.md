@@ -34,14 +34,13 @@ cd smart_scheduler
 
 ---
 
-## 🚀 Live Deployment
+## **🚀 Live Deployment**
 
-👉 [Click here to access the live app](https://weather-smart-scheduler.onrender.com
-)  
+👉 [Click here to access the live app](https://weather-smart-scheduler.onrender.com)
 
 ---
 
-## 📸 Screenshots / Demo GIF
+## **📸 Screenshots / Demo GIF**
 
 ![Home Page Screenshot](screenshots/homepage.png)![Screenshot 2025-06-27 165530](https://github.com/user-attachments/assets/80779b21-a3d5-4faa-a8e9-517483b08285)
 
