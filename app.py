@@ -12,6 +12,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+@app.route("/")
+def home():
+    return """
+    <h2>Welcome to the Smart Scheduler API</h2>
+    <p>Use the endpoint <code>/suggest?city=Pune</code> to get suggestions.</p>
+    <p>Example: <a href='/suggest?city=Pune'>/suggest?city=Pune</a></p>
+    """
+
+
 # Model
 class Suggestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
