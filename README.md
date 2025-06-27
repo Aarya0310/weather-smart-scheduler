@@ -24,6 +24,19 @@ This Capstone Project is a Flask-based web application that integrates **real-ti
 
 ---
 
+## 🚀 Live Deployment
+👉 Click here to access the live app
+(https://weather-smart-scheduler.onrender.com)
+
+## 📸 Screenshots / Demo GIF
+🏠 Home Page
+![Screenshot 2025-06-27 165530](https://github.com/user-attachments/assets/80779b21-a3d5-4faa-a8e9-517483b08285)
+
+💡 Suggestion Page
+![Screenshot 2025-06-27 165520](https://github.com/user-attachments/assets/152d2af7-f17c-4148-bec0-1bfd9a864852)
+
+---
+
 ## ⚙️ Setup Instructions
 
 1. **Clone this Repository:**
@@ -32,19 +45,6 @@ This Capstone Project is a Flask-based web application that integrates **real-ti
 git clone https://github.com/your-username/smart_scheduler.git
 cd smart_scheduler
 
----
-
-## **🚀 Live Deployment**
-
-👉 [Click here to access the live app](https://weather-smart-scheduler.onrender.com)
-
----
-
-## **📸 Screenshots / Demo GIF**
-
-![Home Page Screenshot](screenshots/homepage.png)![Screenshot 2025-06-27 165530](https://github.com/user-attachments/assets/80779b21-a3d5-4faa-a8e9-517483b08285)
-
-![Suggestion Page](screenshots/suggestion.png)![Screenshot 2025-06-27 165520](https://github.com/user-attachments/assets/152d2af7-f17c-4148-bec0-1bfd9a864852)
 
 
 
