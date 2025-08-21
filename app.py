@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # Replace with your OpenWeatherMap API key
-API_KEY = "your_api_key_here"
+API_KEY = "c9e13a16efccc359520cbcfb3c11185c"
 
 # Function to get weather data
 def get_weather(city):
@@ -62,3 +62,4 @@ def get_suggestions():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
