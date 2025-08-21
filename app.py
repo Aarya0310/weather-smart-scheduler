@@ -17,16 +17,16 @@ class Suggestion(db.Model):
     city = db.Column(db.String(100), nullable=False)
     weather = db.Column(db.String(100), nullable=False)
     temperature = db.Column(db.Float, nullable=False)
+    humidity = db.Column(db.Integer, nullable=False)
+    wind_speed = db.Column(db.Float, nullable=False)
     aqi = db.Column(db.Integer, nullable=False)
-    suggestion = db.Column(db.String(200), nullable=False)
+    suggestion = db.Column(db.String(300), nullable=False)
     order_id = db.Column(db.String(100), nullable=True)
 
-# Create DB if not exists before request
-@app.before_request
-def create_tables():
+# Create DB once
+with app.app_context():
     if not os.path.exists("suggestions.db"):
-        with app.app_context():
-            db.create_all()
+        db.create_all()
 
 # Home route
 @app.route("/")
@@ -50,6 +50,8 @@ def get_suggestion():
 
         weather_description = data['weather'][0]['description']
         temperature = data['main']['temp']
+        humidity = data['main']['humidity']
+        wind_speed = data['wind']['speed']
         lat, lon = data['coord']['lat'], data['coord']['lon']
 
         # AQI API
@@ -57,23 +59,31 @@ def get_suggestion():
         aqi_response = requests.get(aqi_url).json()
         aqi = aqi_response['list'][0]['main']['aqi'] * 50  # AQI 1–5 → scale to 50–250
 
-        # Suggestion logic
+        # Curated suggestion logic
         if aqi > 150:
-            suggestion_text = "Avoid outdoor activities. Air quality is very poor."
+            suggestion_text = "🚫 Air quality is very poor. Limit outdoor activities, especially for sensitive groups."
         elif "rain" in weather_description.lower():
-            suggestion_text = "Carry an umbrella. Rain expected."
-        elif temperature > 35:
-            suggestion_text = "Stay hydrated and avoid going out in the afternoon."
-        elif temperature < 10:
-            suggestion_text = "Wear warm clothes. It's quite cold outside."
+            suggestion_text = "🌧️ Rain expected. Carry an umbrella and plan indoor tasks."
+        elif "snow" in weather_description.lower():
+            suggestion_text = "❄️ Snowfall likely. Wear warm clothes and avoid unnecessary travel."
+        elif temperature > 38:
+            suggestion_text = "🥵 Extreme heat. Stay hydrated, avoid outdoor work during noon, and wear light clothes."
+        elif temperature < 5:
+            suggestion_text = "🧥 Very cold. Wear layers and stay warm if going out."
+        elif humidity > 80 and "clear" in weather_description.lower():
+            suggestion_text = "🌫️ High humidity despite clear skies — avoid strenuous outdoor work."
+        elif wind_speed > 10:
+            suggestion_text = "💨 Strong winds. Be cautious if traveling or working outdoors."
         else:
-            suggestion_text = "Weather and air quality are suitable for outdoor tasks."
+            suggestion_text = "✅ Weather and air quality are suitable for most outdoor tasks."
 
         # Save to DB
         new_suggestion = Suggestion(
             city=city,
             weather=weather_description,
             temperature=temperature,
+            humidity=humidity,
+            wind_speed=wind_speed,
             aqi=aqi,
             suggestion=suggestion_text
         )
@@ -84,6 +94,8 @@ def get_suggestion():
             "city": city,
             "weather": weather_description,
             "temperature": temperature,
+            "humidity": humidity,
+            "wind_speed": wind_speed,
             "aqi": aqi,
             "suggestion": suggestion_text
         })
@@ -94,13 +106,15 @@ def get_suggestion():
 # View all suggestions
 @app.route("/suggestions", methods=["GET"])
 def view_all_suggestions():
-    suggestions = Suggestion.query.all()
+    suggestions = Suggestion.query.order_by(Suggestion.id.desc()).all()
     return jsonify([
         {
             "id": s.id,
             "city": s.city,
             "weather": s.weather,
             "temperature": s.temperature,
+            "humidity": s.humidity,
+            "wind_speed": s.wind_speed,
             "aqi": s.aqi,
             "suggestion": s.suggestion,
             "order_id": s.order_id
