@@ -1,140 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather Smart Scheduler</title>
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(120deg, #89f7fe, #66a6ff);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow-x: hidden;
-      animation: bgmove 15s infinite alternate ease-in-out;
-    }
-
-    @keyframes bgmove {
-      from { background-position: left; }
-      to { background-position: right; }
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 20px;
-      padding: 30px;
-      max-width: 800px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
-      font-size: 2rem;
-    }
-
-    input, button {
-      padding: 10px 15px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #aaa;
-      outline: none;
-    }
-
-    button {
-      background: #4facfe;
-      color: white;
-      border: none;
-      margin-left: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #00c6ff;
-    }
-
-    #output {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .card-container {
-      display: flex;
-      gap: 15px;
-      margin-top: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 15px 20px;
-      box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-      flex: 1;
-      min-width: 150px;
-      max-width: 220px;
-      transition: transform 0.25s ease, background 0.3s;
-      cursor: pointer;
-    }
-
-    .card:hover {
-      transform: scale(1.07);
-      background: #f7faff;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Smart Scheduler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #4facfe, #00f2fe);
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: rgba(0,0,0,0.4);
+            padding: 30px;
+            border-radius: 15px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 8px;
+            border: none;
+        }
+        button {
+            background: #ff9800;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e68900;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🌤 Weather Smart Scheduler</h1>
-    <div>
-      <input type="text" id="city" placeholder="Enter city" />
-      <button onclick="getSuggestion()">Get Suggestions</button>
+    <div class="container">
+        <h1>🌤️ Weather Smart Scheduler</h1>
+        <form id="weatherForm">
+            <input type="text" id="city" name="city" placeholder="Enter City" required>
+            <button type="submit">Get Suggestion</button>
+        </form>
+        <div id="result"></div>
     </div>
-    <div id="output"></div>
-  </div>
 
-  <script>
-    async function getSuggestion() {
-      const city = document.getElementById("city").value;
-      if (!city) {
-        alert("Please enter a city!");
-        return;
-      }
+    <script>
+        document.getElementById("weatherForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
 
-      const output = document.getElementById("output");
-      output.innerHTML = "<p>Loading...</p>";
+            let city = document.getElementById("city").value;
 
-      try {
-        const response = await fetch(`/suggest?city=${city}`);
-        const data = await response.json();
+            let formData = new FormData();
+            formData.append("city", city);
 
-        let cards = data.suggestions.map(s => `
-          <div class="card" onclick="alert('You chose: ${s}')">
-            <p>${s}</p>
-          </div>
-        `).join("");
+            try {
+                let response = await fetch("/get_suggestions", {
+                    method: "POST",
+                    body: formData
+                });
 
-        output.innerHTML = `
-          <h2>${data.city}</h2>
-          <p><strong>Weather:</strong> ${data.weather}</p>
-          <p><strong>Temperature:</strong> ${data.temperature} °C</p>
-          <p><strong>AQI:</strong> ${data.aqi}</p>
-          <h3>Suggestions:</h3>
-          <div class="card-container">${cards}</div>
-        `;
-      } catch (err) {
-        output.innerHTML = "<p style='color:red;'>Error fetching suggestions.</p>";
-        console.error(err);
-      }
-    }
-  </script>
+                let data = await response.json();
+
+                if (data.error) {
+                    document.getElementById("result").innerHTML =
+                        `<p style="color:red;">Error: ${data.error}</p>`;
+                } else {
+                    document.getElementById("result").innerHTML = `
+                        <h3>📍 City: ${data.city}</h3>
+                        <p>🌤 Weather: ${data.weather}</p>
+                        <p>🌡 Temperature: ${data.temperature} °C</p>
+                        <p>💨 AQI: ${data.aqi}</p>
+                        <p>✅ Suggestion: <strong>${data.suggestion}</strong></p>
+                    `;
+                }
+            } catch (err) {
+                document.getElementById("result").innerHTML =
+                    `<p style="color:red;">Error producing suggestion</p>`;
+            }
+        });
+    </script>
 </body>
 </html>
