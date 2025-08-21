@@ -7,51 +7,31 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, #4facfe, #00f2fe);
-            color: white;
-            margin: 0;
-            padding: 0;
             text-align: center;
+            margin-top: 50px;
+            background: #f0f8ff;
         }
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            background: rgba(0,0,0,0.4);
-            padding: 30px;
-            border-radius: 15px;
+        h1 {
+            color: #333;
         }
         input, button {
             padding: 10px;
             margin: 10px;
-            border-radius: 8px;
-            border: none;
-        }
-        button {
-            background: #ff9800;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #e68900;
         }
         #result {
             margin-top: 20px;
-            padding: 15px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
+            font-size: 18px;
+            color: #222;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌤️ Weather Smart Scheduler</h1>
-        <form id="weatherForm">
-            <input type="text" id="city" name="city" placeholder="Enter City" required>
-            <button type="submit">Get Suggestion</button>
-        </form>
-        <div id="result"></div>
-    </div>
+    <h1>🌤 Weather Smart Scheduler</h1>
+    <form id="weatherForm">
+        <input type="text" id="city" placeholder="Enter city" required>
+        <button type="submit">Get Suggestions</button>
+    </form>
+    <div id="result"></div>
 
     <script>
         document.getElementById("weatherForm").addEventListener("submit", async function(e) {
@@ -59,13 +39,13 @@
 
             let city = document.getElementById("city").value;
 
-            let formData = new FormData();
-            formData.append("city", city);
-
             try {
                 let response = await fetch("/get_suggestions", {
                     method: "POST",
-                    body: formData
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ city: city })
                 });
 
                 let data = await response.json();
@@ -78,13 +58,12 @@
                         <h3>📍 City: ${data.city}</h3>
                         <p>🌤 Weather: ${data.weather}</p>
                         <p>🌡 Temperature: ${data.temperature} °C</p>
-                        <p>💨 AQI: ${data.aqi}</p>
                         <p>✅ Suggestion: <strong>${data.suggestion}</strong></p>
                     `;
                 }
             } catch (err) {
                 document.getElementById("result").innerHTML =
-                    `<p style="color:red;">Error producing suggestion</p>`;
+                    `<p style="color:red;">Error fetching suggestions</p>`;
             }
         });
     </script>
