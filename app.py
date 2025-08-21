@@ -155,26 +155,30 @@ def get_suggestion():
         aqi = aqi_response['list'][0]['main']['aqi'] * 50  # AQI 1–5 → scale to 50–250
 
         # Suggestion
-        suggestion_text = generate_suggestion(weather_description, temperature, aqi)
+        # Get 3 unique suggestions
+all_suggestions = set()
+while len(all_suggestions) < 3:
+    all_suggestions.add(generate_suggestion(weather_description, temperature, aqi))
+all_suggestions = list(all_suggestions)
 
-        # Save to DB
-        new_suggestion = Suggestion(
-            city=city,
-            weather=weather_description,
-            temperature=temperature,
-            aqi=aqi,
-            suggestion=suggestion_text
-        )
-        db.session.add(new_suggestion)
-        db.session.commit()
+# Save the first one in DB for history
+new_suggestion = Suggestion(
+    city=city,
+    weather=weather_description,
+    temperature=temperature,
+    aqi=aqi,
+    suggestion=all_suggestions[0]
+)
+db.session.add(new_suggestion)
+db.session.commit()
 
-        return jsonify({
-            "city": city,
-            "weather": weather_description,
-            "temperature": temperature,
-            "aqi": aqi,
-            "suggestion": suggestion_text
-        })
+return jsonify({
+    "city": city,
+    "weather": weather_description,
+    "temperature": temperature,
+    "aqi": aqi,
+    "suggestions": all_suggestions
+})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -212,4 +216,5 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
