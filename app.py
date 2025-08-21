@@ -18,10 +18,10 @@ class Suggestion(db.Model):
     weather = db.Column(db.String(100), nullable=False)
     temperature = db.Column(db.Float, nullable=False)
     aqi = db.Column(db.Integer, nullable=False)
-    suggestion = db.Column(db.String(300), nullable=False)
+    suggestion = db.Column(db.String(200), nullable=False)
     order_id = db.Column(db.String(100), nullable=True)
 
-# Create DB if not exists
+# Create DB if not exists before request
 @app.before_request
 def create_tables():
     if not os.path.exists("suggestions.db"):
@@ -33,30 +33,6 @@ def create_tables():
 def home():
     return render_template("index.html")
 
-# City-specific rules
-CITY_RULES = {
-    "Bangalore": "Traffic is heavy, so plan tasks in the morning or evening.",
-    "Delhi": "AQI is usually high, limit outdoor exposure.",
-    "Mumbai": "Humidity is high, carry water.",
-    "Chennai": "Sun is strong, avoid afternoon outdoor tasks.",
-    "Pune": "Weather is pleasant, good for most activities."
-}
-
-# Generate suggestion
-def generate_suggestion(city, weather, temp, aqi):
-    city_rule = CITY_RULES.get(city, "")
-
-    if aqi > 150:
-        return f"Air quality is poor in {city}. {city_rule}"
-    elif "rain" in weather.lower():
-        return f"Rain expected in {city}, carry an umbrella. {city_rule}"
-    elif temp > 35:
-        return f"Very hot in {city}, stay hydrated. {city_rule}"
-    elif temp < 10:
-        return f"Cold weather in {city}, wear warm clothes. {city_rule}"
-    else:
-        return f"Weather and air quality are suitable in {city}. {city_rule}"
-
 # Suggestion API
 @app.route("/suggest", methods=["GET"])
 def get_suggestion():
@@ -66,22 +42,32 @@ def get_suggestion():
     try:
         # Weather API
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-        response = requests.get(url).json()
+        response = requests.get(url)
+        data = response.json()
 
-        if 'weather' not in response or 'main' not in response:
-            return jsonify({"error": "Invalid city or API response."})
+        if 'weather' not in data or 'main' not in data:
+            return jsonify({"error": "Invalid response. City may be wrong."})
 
-        weather_description = response['weather'][0]['description']
-        temperature = response['main']['temp']
-        lat, lon = response['coord']['lat'], response['coord']['lon']
+        weather_description = data['weather'][0]['description']
+        temperature = data['main']['temp']
+        lat, lon = data['coord']['lat'], data['coord']['lon']
 
         # AQI API
         aqi_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
         aqi_response = requests.get(aqi_url).json()
         aqi = aqi_response['list'][0]['main']['aqi'] * 50  # AQI 1–5 → scale to 50–250
 
-        # Generate better suggestion
-        suggestion_text = generate_suggestion(city, weather_description, temperature, aqi)
+        # Suggestion logic
+        if aqi > 150:
+            suggestion_text = "Avoid outdoor activities. Air quality is very poor."
+        elif "rain" in weather_description.lower():
+            suggestion_text = "Carry an umbrella. Rain expected."
+        elif temperature > 35:
+            suggestion_text = "Stay hydrated and avoid going out in the afternoon."
+        elif temperature < 10:
+            suggestion_text = "Wear warm clothes. It's quite cold outside."
+        else:
+            suggestion_text = "Weather and air quality are suitable for outdoor tasks."
 
         # Save to DB
         new_suggestion = Suggestion(
