@@ -154,19 +154,16 @@ def get_suggestion():
         aqi_response = requests.get(aqi_url).json()
         aqi = aqi_response['list'][0]['main']['aqi'] * 50  # AQI 1–5 → scale to 50–250
 
-        # Get 3 unique suggestions
-        all_suggestions = set()
-        while len(all_suggestions) < 3:
-            all_suggestions.add(generate_suggestion(weather_description, temperature, aqi))
-        all_suggestions = list(all_suggestions)
+        # Suggestion
+        suggestion_text = generate_suggestion(weather_description, temperature, aqi)
 
-        # Save the first one in DB for history
+        # Save to DB
         new_suggestion = Suggestion(
             city=city,
             weather=weather_description,
             temperature=temperature,
             aqi=aqi,
-            suggestion=all_suggestions[0]
+            suggestion=suggestion_text
         )
         db.session.add(new_suggestion)
         db.session.commit()
@@ -176,7 +173,7 @@ def get_suggestion():
             "weather": weather_description,
             "temperature": temperature,
             "aqi": aqi,
-            "suggestions": all_suggestions
+            "suggestion": suggestion_text
         })
 
     except Exception as e:
@@ -212,5 +209,4 @@ def checkout():
 
 # Run locally
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(debug=True)
