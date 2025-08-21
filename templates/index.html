@@ -30,24 +30,17 @@
     h1 {
       margin-bottom: 10px;
       color: #2c3e50;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-      font-size: 2.2rem;
     }
 
     .container {
-      background: white;
+      background-color: white;
       padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
       text-align: center;
       width: 90%;
       max-width: 500px;
       animation: fadeInUp 1s ease;
-      transition: transform 0.3s;
-    }
-
-    .container:hover {
-      transform: scale(1.02);
     }
 
     @keyframes fadeInUp {
@@ -58,73 +51,39 @@
     input {
       padding: 12px;
       width: 80%;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       font-size: 16px;
-      outline: none;
-      transition: all 0.3s;
-    }
-
-    input:focus {
-      border-color: #2980b9;
-      box-shadow: 0 0 8px rgba(41, 128, 185, 0.4);
     }
 
     button {
       padding: 12px 24px;
-      background: linear-gradient(135deg, #2980b9, #6dd5fa);
+      background-color: #2980b9;
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 16px;
       cursor: pointer;
-      transition: transform 0.2s, background 0.3s;
+      transition: background-color 0.3s;
     }
 
     button:hover {
-      background: linear-gradient(135deg, #3498db, #89f7fe);
-      transform: translateY(-2px);
+      background-color: #3498db;
     }
 
     #result {
       margin-top: 20px;
       text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .card {
-      background-color: #f8f9fa;
-      border-radius: 14px;
-      padding: 15px 20px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-      animation: slideIn 0.5s ease;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      padding: 15px;
+      background-color: #ecf0f1;
+      border-radius: 10px;
+      animation: fadeIn 0.5s ease;
     }
 
     .loading {
       font-style: italic;
       color: gray;
-    }
-
-    .emoji {
-      font-size: 1.2rem;
-    }
-
-    h3 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      color: #2c3e50;
-    }
-
-    p {
-      margin: 4px 0;
     }
   </style>
 </head>
@@ -147,43 +106,28 @@
         return;
       }
 
-      const loadingCard = document.createElement("div");
-      loadingCard.className = "card loading";
-      loadingCard.innerText = "Fetching data...";
-      resultDiv.prepend(loadingCard);
+      resultDiv.innerHTML = "<p class='loading'>Fetching data...</p>";
 
       try {
         const response = await fetch(`/suggest?city=${encodeURIComponent(city)}`);
         const data = await response.json();
 
-        loadingCard.remove();
-
         if (data.error) {
-          const errorCard = document.createElement("div");
-          errorCard.className = "card";
-          errorCard.innerHTML = `<p><strong>Error:</strong> ${data.error}</p>`;
-          resultDiv.prepend(errorCard);
+          resultDiv.innerHTML = `<p><strong>Error:</strong> ${data.error}</p>`;
         } else {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
+          resultDiv.innerHTML = `
             <h3>📍 ${data.city}</h3>
-            <p><span class="emoji">🌦️</span> <strong>Weather:</strong> ${data.weather}</p>
-            <p><span class="emoji">🌡️</span> <strong>Temperature:</strong> ${data.temperature}°C</p>
-            <p><span class="emoji">🧪</span> <strong>AQI:</strong> ${data.aqi}</p>
-            <p><span class="emoji">📋</span> <strong>Suggestion:</strong> ${data.suggestion}</p>
+            <p><strong>🌦️ Weather:</strong> ${data.weather}</p>
+            <p><strong>🌡️ Temperature:</strong> ${data.temperature}°C</p>
+            <p><strong>🧪 AQI:</strong> ${data.aqi}</p>
+            <p><strong>📋 Suggestion:</strong> ${data.suggestion}</p>
           `;
-          // Add latest result on top
-          resultDiv.prepend(card);
         }
       } catch (err) {
-        loadingCard.remove();
-        const errorCard = document.createElement("div");
-        errorCard.className = "card";
-        errorCard.innerHTML = "<p>Something went wrong. Try again later.</p>";
-        resultDiv.prepend(errorCard);
+        resultDiv.innerHTML = "<p>Something went wrong. Try again later.</p>";
       }
     }
   </script>
 </body>
 </html>
+
