@@ -2,129 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Scheduler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Smart Scheduler</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: linear-gradient(120deg, #89f7fe, #66a6ff);
       min-height: 100vh;
-      animation: fadeIn 1s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      animation: bgmove 15s infinite alternate ease-in-out;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h1 {
-      margin-bottom: 10px;
-      color: #2c3e50;
+    @keyframes bgmove {
+      from { background-position: left; }
+      to { background-position: right; }
     }
 
     .container {
-      background-color: white;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
       padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      text-align: center;
+      max-width: 800px;
       width: 90%;
-      max-width: 500px;
-      animation: fadeInUp 1s ease;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
 
-    @keyframes fadeInUp {
-      from { transform: translateY(40px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 2rem;
     }
 
-    input {
-      padding: 12px;
-      width: 80%;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-      font-size: 16px;
+    input, button {
+      padding: 10px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      outline: none;
     }
 
     button {
-      padding: 12px 24px;
-      background-color: #2980b9;
+      background: #4facfe;
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 16px;
+      margin-left: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: background 0.3s;
     }
 
     button:hover {
-      background-color: #3498db;
+      background: #00c6ff;
     }
 
-    #result {
+    #output {
       margin-top: 20px;
-      text-align: left;
-      padding: 15px;
-      background-color: #ecf0f1;
-      border-radius: 10px;
-      animation: fadeIn 0.5s ease;
+      text-align: center;
     }
 
-    .loading {
-      font-style: italic;
-      color: gray;
+    .card-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px 20px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+      flex: 1;
+      min-width: 150px;
+      max-width: 220px;
+      transition: transform 0.25s ease, background 0.3s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: scale(1.07);
+      background: #f7faff;
     }
   </style>
 </head>
 <body>
-  <h1>🌤️ Smart Scheduler</h1>
   <div class="container">
-    <input type="text" id="cityInput" placeholder="Enter your city (e.g., Pune)" />
-    <br />
-    <button onclick="getSuggestion()">Get Suggestion</button>
-    <div id="result"></div>
+    <h1>🌤 Weather Smart Scheduler</h1>
+    <div>
+      <input type="text" id="city" placeholder="Enter city" />
+      <button onclick="getSuggestion()">Get Suggestions</button>
+    </div>
+    <div id="output"></div>
   </div>
 
   <script>
     async function getSuggestion() {
-      const city = document.getElementById("cityInput").value.trim();
-      const resultDiv = document.getElementById("result");
-
+      const city = document.getElementById("city").value;
       if (!city) {
-        resultDiv.innerHTML = "<p>Please enter a city name.</p>";
+        alert("Please enter a city!");
         return;
       }
 
-      resultDiv.innerHTML = "<p class='loading'>Fetching data...</p>";
+      const output = document.getElementById("output");
+      output.innerHTML = "<p>Loading...</p>";
 
       try {
-        const response = await fetch(`/suggest?city=${encodeURIComponent(city)}`);
+        const response = await fetch(`/suggest?city=${city}`);
         const data = await response.json();
 
-        if (data.error) {
-          resultDiv.innerHTML = `<p><strong>Error:</strong> ${data.error}</p>`;
-        } else {
-          resultDiv.innerHTML = `
-            <h3>📍 ${data.city}</h3>
-            <p><strong>🌦️ Weather:</strong> ${data.weather}</p>
-            <p><strong>🌡️ Temperature:</strong> ${data.temperature}°C</p>
-            <p><strong>🧪 AQI:</strong> ${data.aqi}</p>
-            <p><strong>📋 Suggestion:</strong> ${data.suggestion}</p>
-          `;
-        }
+        let cards = data.suggestions.map(s => `
+          <div class="card" onclick="alert('You chose: ${s}')">
+            <p>${s}</p>
+          </div>
+        `).join("");
+
+        output.innerHTML = `
+          <h2>${data.city}</h2>
+          <p><strong>Weather:</strong> ${data.weather}</p>
+          <p><strong>Temperature:</strong> ${data.temperature} °C</p>
+          <p><strong>AQI:</strong> ${data.aqi}</p>
+          <h3>Suggestions:</h3>
+          <div class="card-container">${cards}</div>
+        `;
       } catch (err) {
-        resultDiv.innerHTML = "<p>Something went wrong. Try again later.</p>";
+        output.innerHTML = "<p style='color:red;'>Error fetching suggestions.</p>";
+        console.error(err);
       }
     }
   </script>
