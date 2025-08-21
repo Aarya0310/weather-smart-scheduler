@@ -1,71 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Smart Scheduler</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-            background: #f0f8ff;
-        }
-        h1 {
-            color: #333;
-        }
-        input, button {
-            padding: 10px;
-            margin: 10px;
-        }
-        #result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #222;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Scheduler</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #2c3e50;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      font-size: 2.2rem;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      animation: fadeInUp 1s ease;
+      transition: transform 0.3s;
+    }
+
+    .container:hover {
+      transform: scale(1.02);
+    }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    input {
+      padding: 12px;
+      width: 80%;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      border-color: #2980b9;
+      box-shadow: 0 0 8px rgba(41, 128, 185, 0.4);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #2980b9, #6dd5fa);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #3498db, #89f7fe);
+      transform: translateY(-2px);
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      background-color: #f8f9fa;
+      border-radius: 14px;
+      padding: 15px 20px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .loading {
+      font-style: italic;
+      color: gray;
+    }
+
+    .emoji {
+      font-size: 1.2rem;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+
+    p {
+      margin: 4px 0;
+    }
+  </style>
 </head>
 <body>
-    <h1>🌤 Weather Smart Scheduler</h1>
-    <form id="weatherForm">
-        <input type="text" id="city" placeholder="Enter city" required>
-        <button type="submit">Get Suggestions</button>
-    </form>
+  <h1>🌤️ Smart Scheduler</h1>
+  <div class="container">
+    <input type="text" id="cityInput" placeholder="Enter your city (e.g., Pune)" />
+    <br />
+    <button onclick="getSuggestion()">Get Suggestion</button>
     <div id="result"></div>
+  </div>
 
-    <script>
-        document.getElementById("weatherForm").addEventListener("submit", async function(e) {
-            e.preventDefault();
+  <script>
+    async function getSuggestion() {
+      const city = document.getElementById("cityInput").value.trim();
+      const resultDiv = document.getElementById("result");
 
-            let city = document.getElementById("city").value;
+      if (!city) {
+        resultDiv.innerHTML = "<p>Please enter a city name.</p>";
+        return;
+      }
 
-            try {
-                let response = await fetch("/get_suggestions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ city: city })
-                });
+      const loadingCard = document.createElement("div");
+      loadingCard.className = "card loading";
+      loadingCard.innerText = "Fetching data...";
+      resultDiv.prepend(loadingCard);
 
-                let data = await response.json();
+      try {
+        const response = await fetch(`/suggest?city=${encodeURIComponent(city)}`);
+        const data = await response.json();
 
-                if (data.error) {
-                    document.getElementById("result").innerHTML =
-                        `<p style="color:red;">Error: ${data.error}</p>`;
-                } else {
-                    document.getElementById("result").innerHTML = `
-                        <h3>📍 City: ${data.city}</h3>
-                        <p>🌤 Weather: ${data.weather}</p>
-                        <p>🌡 Temperature: ${data.temperature} °C</p>
-                        <p>✅ Suggestion: <strong>${data.suggestion}</strong></p>
-                    `;
-                }
-            } catch (err) {
-                document.getElementById("result").innerHTML =
-                    `<p style="color:red;">Error fetching suggestions</p>`;
-            }
-        });
-    </script>
+        loadingCard.remove();
+
+        if (data.error) {
+          const errorCard = document.createElement("div");
+          errorCard.className = "card";
+          errorCard.innerHTML = `<p><strong>Error:</strong> ${data.error}</p>`;
+          resultDiv.prepend(errorCard);
+        } else {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>📍 ${data.city}</h3>
+            <p><span class="emoji">🌦️</span> <strong>Weather:</strong> ${data.weather}</p>
+            <p><span class="emoji">🌡️</span> <strong>Temperature:</strong> ${data.temperature}°C</p>
+            <p><span class="emoji">🧪</span> <strong>AQI:</strong> ${data.aqi}</p>
+            <p><span class="emoji">📋</span> <strong>Suggestion:</strong> ${data.suggestion}</p>
+          `;
+          // Add latest result on top
+          resultDiv.prepend(card);
+        }
+      } catch (err) {
+        loadingCard.remove();
+        const errorCard = document.createElement("div");
+        errorCard.className = "card";
+        errorCard.innerHTML = "<p>Something went wrong. Try again later.</p>";
+        resultDiv.prepend(errorCard);
+      }
+    }
+  </script>
 </body>
 </html>
